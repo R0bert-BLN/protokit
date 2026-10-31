@@ -1,6 +1,6 @@
 # AI tools
 
-Every assistant reads the same source: `AGENTS.md` (the entry point), the rules in `.ai/rules/` and the skills in `.ai/skills/`. A tool that looks for them somewhere else gets an **adapter**: a generated copy or pointer in the place it looks. Adapters are written by `pk sync`, kept current by `pk check`, and never edited by hand.
+Every assistant reads the same source: `AGENTS.md` (the entry point), the rules in `.ai/rules/` and the skills in `.ai/skills/`. A tool that looks for them somewhere else gets an **adapter**: a generated stub in the place it looks, holding only the skill's name, description and a pointer to `.ai/skills/<name>/SKILL.md`. The procedure lives in one place, so editing a skill takes effect at once; run `pk sync` after adding or removing a skill or changing its name, description or argument hint. Adapters are written by `pk sync`, kept current by `pk check`, and never edited by hand.
 
 ## Set up a tool
 
@@ -29,7 +29,7 @@ The list is kept in `protokit.json` under `agents`.
 | GitHub Copilot (VS Code) | `copilot` | `.agents/skills/`, `.github/prompts/` | `/pk-build clinic-booking 2` |
 | Anything else that reads `AGENTS.md` and `.agents/skills/` | `generic` | `.agents/skills/` | by name |
 
-`.agents/skills/` is the shared folder of the Agent Skills standard; Codex, opencode, pi, Gemini CLI, Cursor and Copilot all read it. The command files only point to the skill, so the procedure lives in one place.
+`.agents/skills/` is the shared folder of the Agent Skills standard; Codex, opencode, pi, Gemini CLI, Cursor and Copilot all read it. Skill folders and command files alike only point to the skill.
 
 In any tool, this always works:
 

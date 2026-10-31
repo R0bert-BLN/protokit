@@ -40,7 +40,8 @@ export const rules = () => ['.ai/rules', '.ai/local/rules']
   .flatMap((dir) => (fs.existsSync(abs(dir)) ? fs.readdirSync(abs(dir)).filter((f) => f.endsWith('.md')).sort().map((f) => `${dir}/${f}`) : []));
 
 const fm = (...lines) => `---\n${lines.filter(Boolean).join('\n')}\n---\n`;
-const note = (s) => `<!-- ${MARK} from ${s.file}: edit the source, not this copy. -->`;
+// Every adapter is a stub (the tool's metadata and a pointer): the procedure lives only in .ai/skills
+const note = (s) => `<!-- ${MARK} from ${s.file}: edit the source, not this stub. -->`;
 const pointer = (s, args) => `Follow \`${s.file}\` exactly${args ? ` for: ${args}` : ''}. Read the rules in \`AGENTS.md\` first if they are not loaded yet.\n`;
 const hintText = (s) => s.hint.replace(/^argument-hint:\s*/, '').replace(/^"|"$/g, '');
 const descText = (s) => s.meta.description || '';
@@ -52,14 +53,14 @@ const ADAPTERS = {
       '@AGENTS.md',
       ...rules().map((r) => `@${r}`),
       '',
-      'Claude Code: the rules above are already loaded; do not read them again. The skills in `.claude/skills/` (also `/<name>`) are generated copies: edit `.ai/skills/` (or `.ai/local/skills/`), then run `node scripts/pk.mjs sync`.',
+      'Claude Code: the rules above are already loaded; do not read them again. The skills in `.claude/skills/` (also `/<name>`) are generated stubs that point to `.ai/skills/` (or `.ai/local/skills/`): edit the source; run `node scripts/pk.mjs sync` only after adding a skill or changing a name, description or argument hint.',
       '',
     ].join('\n'),
     ...Object.fromEntries(skills().map((s) => [`.claude/skills/${s.name}/SKILL.md`,
-      `${fm(`name: ${s.name}`, s.description, s.hint, s.manual)}${note(s)}\n${s.body.trimEnd()}\n\nArguments: $ARGUMENTS\n`])),
+      `${fm(`name: ${s.name}`, s.description, s.hint, s.manual)}${note(s)}\n${pointer(s, '$ARGUMENTS')}`])),
   }),
   agents: () => Object.fromEntries(skills().map((s) => [`.agents/skills/${s.name}/SKILL.md`,
-    `${fm(`name: ${s.name}`, s.description)}${note(s)}\n${s.body.trimEnd()}\n`])),
+    `${fm(`name: ${s.name}`, s.description)}${note(s)}\n${pointer(s)}The arguments are the text that came with the request${s.hint ? ` (${hintText(s)})` : ''}.\n`])),
   opencode: () => Object.fromEntries(skills().map((s) => [`.opencode/commands/${s.name}.md`,
     `${fm(`description: ${JSON.stringify(descText(s).split('. ')[0])}`)}${note(s)}\n${pointer(s, '$ARGUMENTS')}`])),
   pi: () => Object.fromEntries(skills().map((s) => [`.pi/prompts/${s.name}.md`,

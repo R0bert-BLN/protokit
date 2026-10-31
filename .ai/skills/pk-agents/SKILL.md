@@ -6,7 +6,7 @@ argument-hint: "[tool …]"
 
 # Agents: adapters for AI tools
 
-Every tool reads the same source: `AGENTS.md`, `.ai/rules/` and `.ai/skills/`. An adapter is a generated copy or pointer in the place a tool looks; `node scripts/pk.mjs sync` writes them, `pk check` keeps them current, and they are never edited by hand.
+Every tool reads the same source: `AGENTS.md`, `.ai/rules/` and `.ai/skills/`. An adapter is a generated stub in the place a tool looks: the skill's name and description (so the tool can find and trigger it) and a pointer to `.ai/skills/<name>/SKILL.md`, never a copy of the procedure; `node scripts/pk.mjs sync` writes them, `pk check` keeps them current, and they are never edited by hand.
 
 | Tool | Gets |
 |---|---|

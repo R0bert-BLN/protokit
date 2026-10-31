@@ -4,4 +4,4 @@
 @.ai/rules/10-mockup-standards.md
 @.ai/rules/20-working.md
 
-Claude Code: the rules above are already loaded; do not read them again. The skills in `.claude/skills/` (also `/<name>`) are generated copies: edit `.ai/skills/` (or `.ai/local/skills/`), then run `node scripts/pk.mjs sync`.
+Claude Code: the rules above are already loaded; do not read them again. The skills in `.claude/skills/` (also `/<name>`) are generated stubs that point to `.ai/skills/` (or `.ai/local/skills/`): edit the source; run `node scripts/pk.mjs sync` only after adding a skill or changing a name, description or argument hint.
