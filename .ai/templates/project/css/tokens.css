@@ -1,0 +1,99 @@
+:root {
+  --bg: #F5F7FA;
+  --surface: #FFFFFF;
+  --surface-2: #EEF2F6;
+  --border: #E3E8EF;
+  --text: #0F1B2D;
+  --text-muted: #5B6B80;
+  --text-on-primary: #FFFFFF;
+  --primary: #1D5FD1;
+  --primary-soft: #E7EFFC;
+  --accent: #15803D;
+  --accent-soft: #E6F6EC;
+  --warning: #B45309;
+  --warning-soft: #FEF3E2;
+  --danger: #DC2626;
+  --danger-soft: #FDECEC;
+  --overlay: rgb(15 27 45 / 45%);
+  --desk-bg: #DDE3EA;
+  --focus: #1D5FD1;
+  --frame: #0F1B2D;
+  --progress: #15803D;
+
+  --phase-1: #1D5FD1;
+  --phase-2: #7C3AED;
+  --phase-3: #B45309;
+  --phase-4: #BE185D;
+
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
+  --lh: 1.45;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgb(15 27 45 / 6%);
+  --shadow-md: 0 2px 4px rgb(15 27 45 / 5%), 0 8px 24px rgb(15 27 45 / 8%);
+  --shadow-lg: 0 24px 64px rgb(15 27 45 / 18%);
+
+  --device-w: 390px;
+  --device-h: 844px;
+  --topbar-h: 56px;
+  --tabbar-h: 64px;
+  --touch: 44px;
+
+  --z-bars: 10;
+  --z-overlay: 50;
+  --z-toast: 60;
+
+  --t-fast: 150ms ease;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0B1220;
+  --surface: #131C2E;
+  --surface-2: #1C2740;
+  --border: #26324A;
+  --text: #E6EDF7;
+  --text-muted: #9AA9BF;
+  --primary: #7FAEFF;
+  --primary-soft: #1A2B4D;
+  --text-on-primary: #0B1220;
+  --accent: #6EE7A0;
+  --accent-soft: #10301F;
+  --warning: #FBBF62;
+  --warning-soft: #3A2A0F;
+  --danger: #FCA5A5;
+  --danger-soft: #3B1518;
+  --overlay: rgb(0 0 0 / 60%);
+  --desk-bg: #05080F;
+  --focus: #7FAEFF;
+  --frame: #2A3346;
+  --progress: #6EE7A0;
+  --phase-1: #7FAEFF;
+  --phase-2: #C4B5FD;
+  --phase-3: #FBBF62;
+  --phase-4: #F9A8D4;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 35%), 0 8px 24px rgb(0 0 0 / 40%);
+  --shadow-lg: 0 24px 64px rgb(0 0 0 / 60%);
+}

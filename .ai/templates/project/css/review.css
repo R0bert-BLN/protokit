@@ -1,0 +1,37 @@
+/* Identical in every project: change it in .ai/templates/project, then run node scripts/pk.mjs sync. */
+/* Review tools on screens: the tool palette of hub.css (light or dark from data-ui), never the project's tokens. */
+.mk-rail {
+  --mk-font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Inter, Roboto, sans-serif;
+  --mk-surface: #FFFFFF; --mk-hover: #F0F0F2; --mk-border: #D4D4D8; --mk-text: #18181B; --mk-faint: #75757E;
+  --mk-focus: #2457D6;
+  --mk-shadow: 0 2px 6px rgb(24 24 27 / 10%), 0 10px 28px rgb(24 24 27 / 14%);
+  color-scheme: light;
+}
+[data-ui="dark"] .mk-rail {
+  --mk-surface: #17171C; --mk-hover: #23232A; --mk-border: #34343C; --mk-text: #EDEDF0; --mk-faint: #8A8A94;
+  --mk-focus: #7BA4FF;
+  --mk-shadow: 0 2px 6px rgb(0 0 0 / 40%), 0 10px 28px rgb(0 0 0 / 45%);
+  color-scheme: dark;
+}
+/* Right edge, vertical: a tab that the user drags out of the way */
+.mk-rail {
+  position: fixed; right: 0; top: 50%; z-index: 1001;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  width: 44px; padding: 6px 0 2px 1px; margin: 0;
+  border: 1px solid var(--mk-border); border-right: 0; border-radius: 12px 0 0 12px;
+  background: var(--mk-surface); color: var(--mk-text); box-shadow: var(--mk-shadow);
+  font: 13px/1.3 var(--mk-font);
+  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.mk-rail.is-dragging { cursor: grabbing; }
+.mk-grip { width: 14px; height: 4px; margin: 2px 0 4px; border-top: 1px solid var(--mk-faint); border-bottom: 1px solid var(--mk-faint); opacity: .8; }
+.mk-btn {
+  display: grid; place-items: center; flex: none; width: 42px; height: 44px; padding: 0;
+  border: 0; border-radius: 8px 0 0 8px; background: none; color: inherit; text-decoration: none; cursor: pointer;
+}
+.mk-rail.is-dragging .mk-btn { cursor: grabbing; }
+.mk-btn:hover { background: var(--mk-hover); }
+.mk-btn:focus-visible { outline: 2px solid var(--mk-focus); outline-offset: -2px; }
+.mk-btn[aria-disabled="true"] { opacity: .3; pointer-events: none; }
+.mk-rail svg { display: block; width: 18px; height: 18px; }
+@media print { .mk-rail { display: none; } }

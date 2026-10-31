@@ -1,0 +1,14 @@
+{
+  "name": "protokit",
+  "version": "0.1.0",
+  "description": "Clickable HTML mockups built with AI assistants: briefs, modules, checks, a local dev hub and build plans for coding agents.",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node scripts/pk.mjs serve",
+    "check": "node scripts/pk.mjs check",
+    "pk": "node scripts/pk.mjs"
+  }
+}

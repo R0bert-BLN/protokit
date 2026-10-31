@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<!-- Identical in every project: change it in .ai/templates/project, then run node scripts/pk.mjs sync. -->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Planned screen</title>
+  <script>try { var t = localStorage.getItem('pk.ui'); document.documentElement.dataset.ui = t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (e) {}</script>
+  <link rel="stylesheet" href="../css/hub.css">
+</head>
+<body class="hub-page">
+  <div data-hub></div>
+  <script src="https://unpkg.com/lucide@1.52.0/dist/umd/lucide.min.js"></script>
+  <script src="../js/project.js"></script>
+  <script src="../js/hub.js"></script>
+  <script>MKHub.planned();</script>
+</body>
+</html>

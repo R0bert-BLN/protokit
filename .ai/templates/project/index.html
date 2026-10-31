@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{TITLE}} · screens</title>
+  <script>try { var t = localStorage.getItem('pk.ui'); document.documentElement.dataset.ui = t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (e) {}</script>
+  <link rel="stylesheet" href="css/hub.css">
+</head>
+<body class="hub-page">
+  <div data-hub></div>
+  <script src="https://unpkg.com/lucide@1.52.0/dist/umd/lucide.min.js"></script>
+  <script src="js/project.js"></script>
+  <script src="js/hub.js"></script>
+  <script>MKHub.hub();</script>
+</body>
+</html>

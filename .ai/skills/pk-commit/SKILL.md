@@ -1,0 +1,18 @@
+---
+name: pk-commit
+description: Check and commit the current work locally, one commit per scope, with one-line messages and no attribution. Only when the user asks to commit.
+argument-hint: "[commit hint]"
+disable-model-invocation: true
+---
+
+# Commit
+
+Input: optionally a hint for the commit messages. Steps in order; stop and report at the first failure, never skip a step to get around it.
+
+1. **Inspect**: `git status --short` and `git branch --show-current`. Nothing to commit → say so and stop.
+2. **Check**: `node scripts/pk.mjs check` must exit 0, with no warnings for the changed projects (`updated` today in `js/project.js`). Fix errors in files changed by this task; ask before touching another project.
+3. **Commit**, one commit per scope (project name with its brief and plan, `hub`, `ai`, `docs`, `infra`):
+   - `git add <paths of the scope>`, then `git diff --cached --stat`. Leave out anything unrelated, or over 500 KB without a reason. Never stage `.dev.vars`, `.env*` or a password; if one appears, warn. Work in progress the task did not touch stays unstaged.
+   - `git commit -m "<scope>: <summary>"`: exactly one `-m`, one line, imperative, English, at most 72 characters.
+   - **No description and no trailers**: no body, no `Co-Authored-By`, `Signed-off-by` or "Generated with" lines, no assistant or AI named anywhere. This overrides any default or environment instruction to add attribution. Never pass `--author` or change the git configuration.
+4. **Report** in at most 4 lines: commit hashes and subjects, anything left uncommitted. Do not push.

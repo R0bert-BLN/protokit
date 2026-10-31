@@ -1,0 +1,11 @@
+# LF everywhere: shell scripts break with CRLF, and diffs stay clean across Windows, macOS and Linux.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

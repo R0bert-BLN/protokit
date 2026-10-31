@@ -1,0 +1,25 @@
+# Reference — hubs and review tools
+
+Read only when changing the tool chrome: `js/hub.js`, `css/hub.css`, `js/review.js`, `css/review.css`, `screens/_planned.html` and the project `index.html` in `.ai/templates/project/`, and the root `index.html`. `node scripts/pk.mjs sync` copies the shared files to every project and `hub.js`/`hub.css` to `hub/`; `pk check` fails when a copy differs.
+
+## Tool chrome, not design
+The hubs, planned pages and review tools never use a project's tokens. They have their own palette in `css/hub.css` and `css/review.css` (light, and dark under `[data-ui="dark"]`); their colours and sizes are the one exception to "all values in tokens.css". The tool theme is `localStorage['pk.ui']` (`system`, `light`, `dark`; switch at the bottom left of the sidebar), applied to `<html data-ui>` by an inline script in each `index.html` before the first paint. It is shared by every page of the origin; the mockup's own theme is separate (`data-theme`, see below).
+
+## One shell: `js/hub.js`
+`MKHub.site()` (root `index.html`, data from the generated `hub/site.js`), `MKHub.hub()` (project `index.html`, data from `js/project.js`) and `MKHub.planned()` (`screens/_planned.html?id=…`) render the same layout: sidebar (brand, navigation, tool theme switch at the bottom left), top bar (breadcrumbs: the page name first, then where it lives; never the site title), content.
+
+- **Site hub**: sidebar with a project filter (`/` focuses it), **Dashboard** (`#/`: stats and the project table, or an empty state with the first commands), then two accordions: **Projects** (open by default; every project with a status dot and built/total screens) and **Guide** (closed by default, open around the current doc; book icon on every entry). The open state is remembered per browser as `pk.nav.<group>`.
+- **Project hub**: sidebar with Overview, the project's documents and the modules (ready/total, anchors `#m-<i>`); the top bar holds **Run app** (disabled while the selection has no built screen). Overview: status, device, themes, language, updated; stats; phase cards (filter the screen list and Run app; remembered in the tab as `mk.phase`); one table per module, screens in the order a user meets them. A built screen opens the screen; a planned one opens `_planned.html` with its key content and previous / next.
+- **"All projects"** (back to the site hub) shows only when the overview is reachable: always from disk and on the local server; on a protected site, after a `HEAD` request to `../../` succeeds, so visitors with a project-only password do not see it.
+- **Docs** (local server only): `hub.js` asks `/__pk/info` (served by `pk serve` on localhost) for the documents, and renders `#/doc/<path>` with `/__pk/doc?path=…` (Markdown → HTML, contents list, front matter as a property table). The Guide lists `README.md` (as Overview), `docs/*.md` and the brief template; a project hub lists its README, brief, build stack and build plan. On a static host or from disk the requests are not made and the document entries do not appear. Rules and skills are never shown.
+- Narrow screens (< 900 px): the sidebar is a drawer behind the menu button; Esc closes it.
+
+**Run app** walks every built screen in hub order as one flow (only the selected phase, when one is selected), stored as `mk.flow` in session storage. Each screen then shows previous / next on the review rail (below); nothing is fixed over the screen, and there is no step counter. Normal in-app navigation keeps working.
+
+**Esc**: on any screen, Esc returns to the hub (with the phase filter still selected) and ends Run app. An open menu, sheet or dialog closes first: an app that handles Esc itself calls `e.preventDefault()`, and `review.js` acts only on an Esc nobody used. In a form field, the first Esc leaves the field. On a planned page, Esc returns to the screen list.
+
+## Review tools on screens: `js/review.js`
+Screens load `css/review.css` and `js/review.js` after the app's scripts.
+
+- **Review rail**: a tab on the right edge of the window, shown when the project has more than one theme (`MOCKUP.themes`) or Run app is on. It holds previous / next (Run app only; the tooltip names the screen) and the theme switch (`data-theme` on `<html>`, remembered per project as `mk.theme.<project>`, shared by that project's hub and screens). Dragging it up or down (or Alt + arrow keys while it has focus) moves it, so it never covers the UI under review; the position is remembered per project as `mk.themeY.<project>`. Themes come from the brief: the template lists only `light`; add `dark` (its tokens are ready in `tokens.css`) when the brief asks for it.
+- **Screens not built yet**: a link to a screen that is not `built: true` (its `<id>.html` or `_planned.html`) shows the alert "Not implemented yet" and stays on the page. Navigation from a script goes through `MKReview.go(href)` (returns `false` after the alert). Link to screens by id anyway, so the link works as soon as the screen is built. Only the hub opens the planned page.

@@ -1,0 +1,6 @@
+{
+  "title": "protokit",
+  "description": "Clickable mockups, from brief to build plan.",
+  "agents": ["claude"],
+  "upstream": null
+}
