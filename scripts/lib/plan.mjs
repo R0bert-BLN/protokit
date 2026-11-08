@@ -11,7 +11,7 @@ export const PROFILES = {
 };
 const INTERACTIVE = /data-open|\.sheet\(|\.tabs\(|\.chips\(|addEventListener|onclick=|MK\.state|MK\.toast|data-chip|role="tab"/;
 
-function readStack(slug) {
+export function readStack(slug) {
   const file = `plans/${slug}/stack.md`;
   if (!fs.existsSync(abs(file))) fail(`No ${file}. Run /pk-plan ${slug} (it asks the stack questions and writes it), or copy .ai/templates/plan/stack.md.`);
   const text = read(file);
@@ -97,7 +97,12 @@ export function buildPlan(slug) {
     ].filter((x) => x !== '').join('\n'),
   });
 
-  const lines = spec.indexLines.map((l) => l.replace(/^\/\/\s+/, ''));
+  // Components are the MK.ui.* functions. Other MK.* entries are mockup helpers, not components: the template's own
+  // (MK.esc) are plumbing and dropped; the project's (pagination, form binding) become behaviour notes on the screens.
+  const callName = (l) => l.split(/[\s(]/)[0];
+  const isHelper = (l) => /^MK\.(?!ui\.)/.test(l);
+  const plumbing = new Set(read('.ai/templates/project/js/components.js').split('\n').filter((l) => /^\/\/\s{2,}MK\./.test(l)).map((l) => callName(l.replace(/^\/\/\s+/, ''))).filter((n) => isHelper(n)));
+  const lines = spec.indexLines.map((l) => l.replace(/^\/\/\s+/, '')).filter((l) => !isHelper(l));
   const groups = [];
   const size = P.componentGroup || lines.length || 1;
   for (let i = 0; i < lines.length; i += size) groups.push(lines.slice(i, i + size));
@@ -169,7 +174,9 @@ export function buildPlan(slug) {
     for (const s of spec.screensOf(mod)) {
       const src = spec.screenSource(s.id);
       const built = spec.built.has(s.id);
-      const used = spec.usedComponents([s.id]);
+      const usedAll = spec.usedComponents([s.id]);
+      const used = usedAll.filter((u) => !isHelper(u));
+      const helpers = usedAll.filter((u) => isHelper(u) && !plumbing.has(callName(u)));
       const usedTickets = componentTickets.filter((t) => used.some((u) => t.body.includes(u.split(' — ')[0])));
       const dataKeys = [...new Set([...src.matchAll(/\b(?:MK\.)?data\.([a-zA-Z_]\w*)/g)].map((m) => m[1]))].filter((k) => spec.ctxData()[k] !== undefined);
       const detail = screenDetail(mod, s.id);
@@ -183,6 +190,7 @@ export function buildPlan(slug) {
         s.phase ? `- Phase: ${spec.label(s.phase)}` : '',
         s.legal ? `- Shows the legal note: "${(b.section(/^Constraints$/)?.lines.join('\n').match(/Legal note[^"]*"([^"]+)"/) || [])[1] || 'Requires legal validation before implementation'}"` : '',
         detail && `\n${detail}`,
+        ...(helpers.length ? ['', '### Behaviour from the mockup helpers', 'Reproduce this behaviour with the stack\'s own means (hooks, form library, API parameters); the helpers are mockup code, not components to port.', ...helpers.map((u) => `- \`${u.split(' — ')[0]}\` — ${u.split(' — ').slice(1).join(' — ')}`)] : []),
       ].filter((x) => x !== '');
       const comps = used.length ? ['', '### Components', ...used.map((u) => `- \`${u.split(' — ')[0]}\` — ${u.split(' — ').slice(1).join(' — ')}`)] : [];
       const data = dataKeys.length ? ['', '### Data', ...dataKeys.map((k) => describeData(k, spec.ctxData()[k]))] : [];
@@ -273,7 +281,7 @@ export function writePlan(slug) {
 }
 
 // Minimal MCP client for Kanzo's streamable HTTP endpoint
-async function mcp(url) {
+export async function mcp(url) {
   let session = null, seq = 0;
   const post = async (body) => {
     const res = await fetch(url, {
@@ -305,10 +313,19 @@ async function mcp(url) {
     if (msg.error) throw new Error(`${method}: ${msg.error.message}`);
     return msg.result;
   };
-  await call('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'protokit', version: '1' } });
-  await post({ jsonrpc: '2.0', method: 'notifications/initialized' });
+  const connect = async () => {
+    session = null;
+    await call('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'protokit', version: '1' } });
+    await post({ jsonrpc: '2.0', method: 'notifications/initialized' });
+  };
+  await connect();
   return async (name, args) => {
-    const r = await call('tools/call', { name, arguments: args });
+    // Kanzo drops idle sessions (pk factory waits minutes between calls): reconnect once and retry
+    const r = await call('tools/call', { name, arguments: args }).catch(async (e) => {
+      if (!/HTTP 404/.test(e.message)) throw e;
+      await connect();
+      return call('tools/call', { name, arguments: args });
+    });
     const text = (r.content || []).map((c) => c.text).join('\n');
     if (r.isError) throw new Error(`${name}: ${text}`);
     return text;
@@ -323,7 +340,8 @@ export async function pushPlan(slug, { url = 'http://127.0.0.1:4242/mcp', update
   const fresh = tickets.filter((t) => !map[t.key]);
   const lastPushed = Math.max(-1, ...tickets.map((t, i) => (map[t.key] ? i : -1)));
   const late = fresh.filter((t) => tickets.indexOf(t) < lastPushed);
-  if (dry) return `${fresh.length} new, ${tickets.length - fresh.length} already on the board${late.length ? `; ${late.map((t) => t.id).join(', ')} would land after tickets they precede` : ''}.`;
+  const stale = Object.keys(map).filter((k) => !tickets.some((t) => t.key === k));
+  if (dry) return `${fresh.length} new, ${tickets.length - fresh.length} already on the board${stale.length ? `, ${stale.length} no longer in the plan (${update ? 'removed while still in todo' : 'run with --update to remove them'}: ${stale.map((k) => map[k]).join(', ')})` : ''}${late.length ? `; ${late.map((t) => t.id).join(', ')} would land after tickets they precede` : ''}.`;
 
   let tool;
   try { tool = await mcp(url); } catch (e) { fail(`Kanzo is not reachable at ${url} (${e.cause?.code || e.message}). Start the board (kanzo, or kanzo service install; on Windows, WSL must be running: see docs/build-plan.md), then retry.`); }
@@ -336,11 +354,34 @@ export async function pushPlan(slug, { url = 'http://127.0.0.1:4242/mcp', update
     const res = await fetch(new URL(`/api/tasks/${key.split('#').pop()}`, url), { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ human }) }).catch((e) => e);
     if (!res.ok) console.warn(`Could not mark ${key} as human (${res.status || res.message}); mark it on the board.`);
   };
-  let created = 0, updated = 0;
+  const getTask = async (key) => (await (await fetch(new URL(`/api/tasks/${key.split('#').pop()}`, url))).json().catch(() => ({}))).task;
+  // Tags pk factory adds; an update keeps them, and keeps such a ticket flagged human
+  const FACTORY_TAGS = ['skipped', 'blocked'];
+  let created = 0, updated = 0, removed = 0;
+  const kept = [];
+  if (update) {
+    // Tickets no longer in the plan: delete their cards while still in todo; keep cards someone worked on
+    const live = new Set(tickets.map((t) => t.key));
+    for (const [key, id] of Object.entries(map)) {
+      if (live.has(key)) continue;
+      const card = await getTask(id);
+      if (card && card.status !== 'todo') { kept.push(`${id} (${card.status})`); continue; }
+      if (card) await tool('delete_task', { id });
+      delete map[key];
+      removed++;
+    }
+    write(mapFile, `${JSON.stringify(map, null, 2)}\n`);
+  }
   for (const t of tickets) {
     const args = { title: t.title, description: t.description, tags: t.tags };
     if (map[t.key]) {
-      if (update) { await tool('update_task', { id: map[t.key], ...args }); await setHuman(map[t.key], t.human); updated++; }
+      if (update) {
+        const card = await getTask(map[t.key]);
+        const marks = (card?.tags || []).filter((x) => FACTORY_TAGS.includes(x));
+        await tool('update_task', { id: map[t.key], ...args, tags: [...new Set([...t.tags.split(',').filter(Boolean), ...marks])].join(',') });
+        await setHuman(map[t.key], t.human || marks.length > 0);
+        updated++;
+      }
       continue;
     }
     const reply = await tool('create_task', { project, ...args });
@@ -351,5 +392,5 @@ export async function pushPlan(slug, { url = 'http://127.0.0.1:4242/mcp', update
     write(mapFile, `${JSON.stringify(map, null, 2)}\n`);
     created++;
   }
-  return `Kanzo project '${project}': ${created} created, ${updated} updated, ${tickets.length - created - updated} unchanged.${late.length ? ` Note: ${late.map((t) => t.id).join(', ')} were added at the end of todo, after tickets they should precede; reorder them on the board.` : ''}`;
+  return `Kanzo project '${project}': ${created} created, ${updated} updated, ${removed} removed, ${tickets.length - created - updated} unchanged.${kept.length ? ` Not in the plan any more but already worked on, so kept: ${kept.join(', ')}.` : ''}${late.length ? ` Note: ${late.map((t) => t.id).join(', ')} were added at the end of todo, after tickets they should precede; reorder them on the board.` : ''}`;
 }

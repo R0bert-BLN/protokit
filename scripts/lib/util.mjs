@@ -61,7 +61,7 @@ export const frontMatter = (text) => {
   if (!m) return { meta, body: text, raw: '' };
   for (const line of m[1].split('\n')) {
     const kv = line.match(/^([A-Za-z_][\w-]*):\s*(.*?)\s*(?:\s#\s.*)?$/);
-    if (kv) meta[kv[1]] = kv[2];
+    if (kv) meta[kv[1]] = /^#(\s|$)/.test(kv[2]) ? '' : kv[2];
   }
   return { meta, body: text.slice(m[0].length), raw: m[0] };
 };

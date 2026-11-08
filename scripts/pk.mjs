@@ -10,6 +10,7 @@ const USAGE = `protokit · node scripts/pk.mjs <command>   (or: npm run pk -- <c
   handoff <slug> [n]           print the implementation spec: foundation, or module n
   plan <slug>                  generate plans/<slug>/tickets.md from stack.md and the mockup
   plan push <slug>             create the tickets on the Kanzo board (--update, --dry-run, --url <mcp url>)
+  factory <slug>               work the board with a coding agent, one ticket at a time (--once, --dry-run, --attempts <n>, --timeout <min>)
   check [slug]                 repository checks; must pass before every commit
   serve [slug]                 local server with live reload and docs (--port <n>, --no-open, --no-live); also: npm start
   sync                         regenerate derived files: agent adapters, hub/site.js, shared project files
@@ -23,7 +24,7 @@ for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (a.startsWith('--')) {
     const [k, v] = a.slice(2).split('=');
-    flags[k] = v ?? (argv[i + 1] && !argv[i + 1].startsWith('--') && ['port', 'url', 'from'].includes(k) ? argv[++i] : true);
+    flags[k] = v ?? (argv[i + 1] && !argv[i + 1].startsWith('--') && ['port', 'url', 'from', 'attempts', 'timeout'].includes(k) ? argv[++i] : true);
   } else args.push(a);
 }
 const [cmd, ...rest] = args;
@@ -54,6 +55,10 @@ async function main() {
       const plan = await import('./lib/plan.mjs');
       if (rest[0] === 'push') return plan.pushPlan(rest[1] || fail(USAGE), { url: flags.url, update: !!flags.update, dry: !!flags['dry-run'] });
       return plan.writePlan(rest[0] || fail(USAGE));
+    }
+    case 'factory': {
+      const { factory } = await import('./lib/factory.mjs');
+      return factory(rest[0] || fail(USAGE), flags);
     }
     case 'check': {
       const { check } = await import('./lib/check.mjs');
