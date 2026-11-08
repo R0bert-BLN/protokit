@@ -31,11 +31,11 @@ Take the smaller profile when size and context disagree, or when unsure. Record 
 
 ## 3. stack.md
 Fill every section; no `<placeholder>` may remain.
-- Front matter: `repo`, `kanzo`, `mockups` (absolute path of this repository), `model`, `context`, `profile`, `verify` (one command that lints, type-checks and tests), `path` (where the production repository is or will be checked out) and `agent` (the non-interactive command that runs the builder model, e.g. `pi -p --model <provider/id>`). For `pk factory`, optionally `reset`, `protected`, `llm`, `attempts`, `timeout` (see `docs/build-plan.md`, Dark factory).
+- Front matter: `repo`, `kanzo`, `mockups` (absolute path of this repository), `model`, `context`, `profile`, `verify` (one command that lints, type-checks and tests), `path` (where the production repository is or will be checked out) and `agent` (the non-interactive command that runs the builder model, e.g. `pi -p --model <provider/id>`). For `pk factory`, optionally `format`, `reset`, `protected`, `llm`, `attempts`, `timeout` (see `docs/build-plan.md`, Dark factory).
 - **Stack**: the table, with versions.
 - **Conventions**: the framework's idiomatic folder structure and naming, where screens, components, theme and data live, i18n when the UI language is not English.
 - **Agent instructions**: the `AGENTS.md` for the production repository (the setup ticket creates it): stack in one line, conventions, how to take and finish Kanzo tickets, the verify command, the one-line commit format. For the `small` profile, also: "read only the files named in the ticket".
-- **Extra tickets**: everything the mockup cannot show, in build order: backend, auth, persistence, payments, notifications, CI, deploy, analytics. Steps only a person can do (accounts, API keys, store listings, DNS) get `human: yes`. For `small`, keep each extra ticket to one concern.
+- **Extra tickets**: everything the mockup cannot show, in build order: backend, auth, persistence, payments, notifications, CI, deploy, analytics. Steps only a person can do (accounts, API keys, store listings, DNS) get `human: yes`. Give each extra ticket `depends:` for the extra tickets it builds on. For `small`, keep each extra ticket to one concern.
 
 ## 4. Generate and review
 1. `node scripts/pk.mjs plan <slug>` writes `plans/<slug>/tickets.md`. Never edit it by hand: change `stack.md` and run it again.

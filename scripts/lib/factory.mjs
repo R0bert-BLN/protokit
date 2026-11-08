@@ -3,7 +3,7 @@
 // files changed, no protected file changed and the verify command passes, then commits it and moves it to review.
 // A failed attempt is reset and retried with the errors; after `attempts` failures the ticket is skipped,
 // and tickets that depend on a skipped, blocked or human ticket are blocked. Both stay in todo, flagged human.
-// Settings: plans/<slug>/stack.md front matter (path, verify, agent, reset, protected, llm, attempts, timeout).
+// Settings: plans/<slug>/stack.md front matter (path, verify, agent, format, reset, protected, llm, attempts, timeout).
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -12,6 +12,7 @@ import { fail } from './util.mjs';
 import { mcp, readStack } from './plan.mjs';
 
 const RUNS = '.factory';
+const MAX_BLANKS = 3; // a blank reply with no work is retried for free this many times, minus one
 const log = (...a) => console.log(`[${new Date().toLocaleTimeString('en-GB')}]`, ...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const tail = (s, n) => (s.length > n ? `…\n${s.slice(-n)}` : s);
@@ -36,6 +37,7 @@ function settings(slug, flags) {
     verify: meta.verify,
     agent: meta.agent.includes('$FACTORY_PROMPT') ? meta.agent : `${meta.agent} "$FACTORY_PROMPT"`,
     reset: meta.reset || '',
+    format: meta.format || '',
     llm: meta.llm || '',
     protected: [...new Set(['AGENTS.md', ...(/^\.?\.?\//.test(verifyFile) ? [verifyFile.replace(/^\.\//, '')] : []), ...list(meta.protected)])],
     attempts: Number(flags.attempts || meta.attempts || 5),
@@ -65,10 +67,11 @@ export async function factory(slug, flags = {}) {
   const ref = (id) => `${S.project}#${id}`;
   const comment = (id, body) => (S.dry ? log(`(dry) comment on ${ref(id)}`) : tool('add_comment', { id: ref(id), author: 'factory', body }));
   const update = (id, fields) => (S.dry ? log(`(dry) update ${ref(id)}`, JSON.stringify(fields)) : tool('update_task', { id: ref(id), ...fields }));
-  // "voltcart#5 [todo] T05 · Products table {extra, backend}" → { id, status, key, tags }
-  const listTasks = async () => (await tool('list_tasks', { project: S.project, status: 'all' })).split('\n')
-    .map((l) => l.match(/^\S+#(\d+) \[(\w+)\] (T\d+) · .*?(?:\{([^}]*)\})?$/)).filter(Boolean)
-    .map(([, id, status, key, tags]) => ({ id: Number(id), status, key, tags: list(tags) }));
+  // The board API, not list_tasks: that one hides cards flagged human, which is exactly what dependency checks need
+  const listTasks = async () => (await (await fetch(`${base}/api/board`)).json()).tasks
+    .filter((t) => t.project === S.project && /^T\d+ · /.test(t.title))
+    .sort((x, y) => x.position - y.position)
+    .map((t) => ({ id: t.id, status: t.status, key: t.title.split(' ')[0], tags: t.tags }));
 
   const prompt = (task, previous) => [
     'You are implementing exactly one ticket in this repository, on your own: nobody will answer questions.',
@@ -118,17 +121,27 @@ export async function factory(slug, flags = {}) {
     Object.assign(current, { task, base: sha });
     await update(task.id, { status: 'doing' });
     let previous = '';
+    let blanks = 0;
     for (let attempt = 1; attempt <= S.attempts; attempt++) {
       await waitForModel();
       log(`${key} attempt ${attempt}/${S.attempts}`);
       const agent = await runAgent(prompt(task, previous), path.join(runDir, `attempt-${attempt}.log`));
+      if (stopping) return new Promise(() => {}); // Ctrl+C killed the agent: not a failed attempt; the handler resets and exits
       const changed = git('status', '--porcelain').split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^"|"$/g, '').replace(/^.* -> /, ''));
+      if (!changed.length && !agent.output && ++blanks < MAX_BLANKS) {
+        log(`${key} blank reply from the agent (${blanks}/${MAX_BLANKS - 1} free retries)`);
+        attempt--;
+        await sleep(5000);
+        continue;
+      }
+      blanks = 0;
       const touched = changed.filter((f) => S.protected.some((p) => f === p || (p.endsWith('/') && f.startsWith(p))));
       let reason = '';
       let detail = '';
       if (!changed.length) reason = 'no files changed';
       else if (touched.length) reason = `changed protected files: ${touched.join(', ')}`;
       else {
+        if (S.format) shell(S.format); // style fixes must not cost an attempt; a formatter's own failure is left to verify
         const v = shell(S.verify);
         const output = `${v.stdout}\n${v.stderr}`.replace(/\x1b\[[0-9;]*m/g, '');
         fs.writeFileSync(path.join(runDir, `verify-${attempt}.log`), output);

@@ -25,11 +25,11 @@ export function readStack(slug) {
     const fields = {};
     let i = 0;
     for (; i < lines.length; i++) {
-      const m = lines[i].match(/^(after|tags|human|key):\s*(.*)$/i);
+      const m = lines[i].match(/^(after|tags|human|key|depends):\s*(.*)$/i);
       if (!m) break;
       fields[m[1].toLowerCase()] = m[2].trim();
     }
-    return { title: title.trim(), after: fields.after || 'end', tags: fields.tags || '', human: /^(yes|true)$/i.test(fields.human || ''), key: fields.key, body: lines.slice(i).join('\n').trim() };
+    return { title: title.trim(), after: fields.after || 'end', tags: fields.tags || '', human: /^(yes|true)$/i.test(fields.human || ''), key: fields.key, depends: (fields.depends || '').split(';').map((x) => x.trim()).filter(Boolean), body: lines.slice(i).join('\n').trim() };
   });
   return { file, meta, profile, P: PROFILES[profile], section, extras, agents: section('Agent instructions'), stackTable: section('Stack'), conventions: section('Conventions') };
 }
@@ -49,7 +49,7 @@ export function buildPlan(slug) {
   const extrasAfter = (where) => st.extras.filter((e) => e.after === where).map((e, i) => add({
     key: e.key || `extra:${where}:${i + 1}:${e.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)}`,
     title: e.title, tags: ['extra', ...e.tags.split(',').map((x) => x.trim()).filter(Boolean)], human: e.human, body: e.body,
-    deps: [byKey('setup')].filter(Boolean),
+    deps: [byKey('setup'), ...e.depends.map((d) => tickets.find((t) => t.title === d) || fail(`${st.file}: "${e.title}" depends on "${d}", which is not an earlier ticket.`))].filter(Boolean),
   }));
 
   const tokenNames = Object.keys(spec.light).filter((k) => !k.startsWith('--hub-'));

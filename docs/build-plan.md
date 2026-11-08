@@ -39,7 +39,7 @@ Acceptance        checklist, ending with the verify command
 How to work       dependencies, file limit, verify, commit format, move to review
 ```
 
-The order is: setup (which also writes the production repository's `AGENTS.md`), theme tokens, components, data model, app shell, then each module's screens and a flow-test ticket per module. Work the mockup cannot show (backend, auth, payments, CI, deploy) goes under **Extra tickets** in `stack.md`, with `after:` saying where it belongs. Steps only a person can do (accounts, API keys, store listings) have `human: yes`: agents skip them, and the tickets that need them wait.
+The order is: setup (which also writes the production repository's `AGENTS.md`), theme tokens, components, data model, app shell, then each module's screens and a flow-test ticket per module. Work the mockup cannot show (backend, auth, payments, CI, deploy) goes under **Extra tickets** in `stack.md`, with `after:` saying where it belongs and `depends:` naming the earlier tickets it builds on. Steps only a person can do (accounts, API keys, store listings) have `human: yes`: agents skip them, and the tickets that need them wait.
 
 ## Kanzo
 
@@ -83,7 +83,7 @@ Any other MCP client: `http://localhost:4242/mcp`. Then: "take the next task fro
 1. It takes the top ticket in "todo" that is not flagged human. If a ticket it depends on is not in "review" or "done", or was skipped, the ticket is flagged human and tagged `blocked`, and the factory moves on.
 2. It moves the card to "doing" and runs `agent` with the ticket text and the rules (the prompt is in `$FACTORY_PROMPT`; it is appended as the last argument when the command does not use it). The agent reads `AGENTS.md` itself, and never touches git or the board.
 3. An attempt counts only when files changed, no protected file changed (`AGENTS.md`, the verify script and `protected`) and `verify` exits 0. The factory then commits `Tnn: title` and moves the card to "review" with the diffstat and the agent's summary.
-4. A failed attempt is reset (`git reset --hard`, `git clean`, then `reset`) and retried with the errors in the prompt. After `attempts` failures (default 5) the ticket stays in "todo", flagged human and tagged `skipped`, with the last errors in a comment.
+4. A failed attempt is reset (`git reset --hard`, `git clean`, then `reset`) and retried with the errors in the prompt. A blank reply with no changes is a model hiccup: it is retried twice without counting as an attempt. After `attempts` failures (default 5) the ticket stays in "todo", flagged human and tagged `skipped`, with the last errors in a comment.
 
 ```bash
 npm run pk -- factory clinic-booking --dry-run   # the next ticket; changes nothing
@@ -98,6 +98,7 @@ Settings, in the front matter of `plans/<slug>/stack.md`:
 | `path` | `/home/me/projects/clinic-booking` | The production repository checkout; its working tree must be clean |
 | `verify` | `./bin/verify` | The gate; it runs in `path` |
 | `agent` | `pi -p --model llama-cpp/qwen3-coder` | Any non-interactive agent: `opencode run`, `codex exec`, `claude -p` |
+| `format` | `./bin/format` | Optional: formatter run before `verify`, so style issues do not cost an attempt |
 | `reset` | `./bin/reset` | Optional: restore dependencies and the dev database after a failed attempt |
 | `protected` | `compose.yaml, docker/, bin/` | Optional: more files or folders (ending in `/`) the agent may not change |
 | `llm` | `http://127.0.0.1:8080/v1/models` | Optional: the factory waits until this answers before each attempt |

@@ -9,6 +9,7 @@ profile: <small | medium | large>
 verify: <one command that lints, type-checks and tests, e.g. pnpm lint && pnpm test>
 path: <absolute path of the production repository checkout, for pk factory>
 agent: <command that runs the builder agent non-interactively, e.g. pi -p --model llama-cpp/ornith>
+format:  # optional: formatter run before verify, so style issues do not cost an attempt
 reset:  # optional: command run after a failed factory attempt (reinstall dependencies, reset the dev database)
 protected:  # optional: comma-separated files or folders/ the agent may not change, besides AGENTS.md and the verify script
 llm:  # optional: URL the factory polls before each attempt, e.g. http://127.0.0.1:8080/v1/models
@@ -54,4 +55,5 @@ timeout: 30  # minutes per attempt
        after: setup | foundation | module-<n> | end    (where it goes in the order)
        tags: comma-separated
        human: yes                                      (only for steps a person must do: accounts, keys, store listings)
+       depends: Title of an earlier ticket; Another title   (what it builds on, so pk factory blocks it when one is skipped)
      then the description in Markdown, with acceptance criteria. -->
