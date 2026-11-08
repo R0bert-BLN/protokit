@@ -32,6 +32,7 @@ Plain requests work too: `Continue clinic-booking.`, `clinic-booking: reminders 
 | `handoff <slug> [n]` | Prints the implementation spec: product, tokens, components, data model, screens, decisions; or one module |
 | `plan <slug>` | Generates `plans/<slug>/tickets.md` from `plans/<slug>/stack.md` and the mockup |
 | `plan push <slug>` | Creates the tickets on the Kanzo board. `--dry-run` shows what would happen, `--update` rewrites tickets already on the board, `--url` sets the MCP endpoint (default `http://127.0.0.1:4242/mcp`) |
+| `factory <slug>` | Works the Kanzo board with the coding agent from `stack.md`, one ticket at a time: commits what passes `verify`, skips a ticket after 5 failed attempts. `--once`, `--dry-run`, `--attempts <n>`, `--timeout <min>` ([Build plan](build-plan.md#dark-factory)) |
 | `check [slug]` | Repository checks; exit code 1 on errors. Must pass before every commit |
 | `serve [slug]` | Local hub with live reload and docs. `--port <n>`, `--no-open`, `--no-live` (for browser automation). `npm start` runs it |
 | `sync` | Regenerates the derived files: agent adapters, `hub/site.js`, the shared hub and review files of every project |

@@ -22,6 +22,9 @@ From an idea to an approved mockup, and from the mockup to a build plan.
    │
    ▼
  /pk-plan <slug> ──────► stack + model questions → tickets → Kanzo board → coding agents
+   │
+   ▼
+ pk factory <slug> ────► the agent works the board unattended, one verified commit per ticket
 ```
 
 ## Principles

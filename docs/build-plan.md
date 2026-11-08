@@ -75,3 +75,32 @@ codex mcp add kanzo -- kanzo mcp                   # Codex
 ```
 
 Any other MCP client: `http://localhost:4242/mcp`. Then: "take the next task from kanzo and do it". Each agent moves its card to "doing", comments as it works, and finishes in "review" for you to check.
+
+## Dark factory
+
+`pk factory <slug>` works the board without you: one ticket at a time, with the agent command from `stack.md`, in the production repository at `path`. It suits a local model that runs all night.
+
+1. It takes the top ticket in "todo" that is not flagged human. If a ticket it depends on is not in "review" or "done", or was skipped, the ticket is flagged human and tagged `blocked`, and the factory moves on.
+2. It moves the card to "doing" and runs `agent` with the ticket text and the rules (the prompt is in `$FACTORY_PROMPT`; it is appended as the last argument when the command does not use it). The agent reads `AGENTS.md` itself, and never touches git or the board.
+3. An attempt counts only when files changed, no protected file changed (`AGENTS.md`, the verify script and `protected`) and `verify` exits 0. The factory then commits `Tnn: title` and moves the card to "review" with the diffstat and the agent's summary.
+4. A failed attempt is reset (`git reset --hard`, `git clean`, then `reset`) and retried with the errors in the prompt. After `attempts` failures (default 5) the ticket stays in "todo", flagged human and tagged `skipped`, with the last errors in a comment.
+
+```bash
+npm run pk -- factory clinic-booking --dry-run   # the next ticket; changes nothing
+npm run pk -- factory clinic-booking --once      # one ticket
+npm run pk -- factory clinic-booking             # until todo has nothing left for it
+```
+
+Settings, in the front matter of `plans/<slug>/stack.md`:
+
+| Field | Example | |
+|---|---|---|
+| `path` | `/home/me/projects/clinic-booking` | The production repository checkout; its working tree must be clean |
+| `verify` | `./bin/verify` | The gate; it runs in `path` |
+| `agent` | `pi -p --model llama-cpp/qwen3-coder` | Any non-interactive agent: `opencode run`, `codex exec`, `claude -p` |
+| `reset` | `./bin/reset` | Optional: restore dependencies and the dev database after a failed attempt |
+| `protected` | `compose.yaml, docker/, bin/` | Optional: more files or folders (ending in `/`) the agent may not change |
+| `llm` | `http://127.0.0.1:8080/v1/models` | Optional: the factory waits until this answers before each attempt |
+| `attempts`, `timeout` | `5`, `30` | Attempts per ticket, minutes per attempt; `--attempts` and `--timeout` override them |
+
+Logs and agent output go to `.factory/Tnn/` in the production repository (excluded from git through `.git/info/exclude`). Ctrl+C resets the attempt in progress and puts its card back in "todo". To hand a skipped or blocked ticket back: fix the cause or the ticket text, then clear its human flag and the tag on the board. Run one factory at a time per model server: two would only wait for each other.

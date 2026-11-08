@@ -5,7 +5,7 @@ Clickable mockups, from brief to build plan. protokit is a workspace for designi
 - **Briefs split into modules**, so each part of the app is built in a small, focused session, even by a small model.
 - **A CLI that does the deterministic work**: validation, scaffolding, context for each module, checks, the implementation spec.
 - **A local dev hub** with every project, screen and doc, light and dark, live reload and a Run app mode that walks the screens as one flow.
-- **Build plans for coding agents**: answer the stack questions, name the model that will build it, and get tickets sized for that model, with the design notes inline, on a [Kanzo](https://github.com/emanuele-em/kanzo) board.
+- **Build plans for coding agents**: answer the stack questions, name the model that will build it, and get tickets sized for that model, with the design notes inline, on a [Kanzo](https://github.com/emanuele-em/kanzo) board, worked by your agents or unattended by `pk factory`.
 - **Works with your assistant**: Claude Code, Codex, opencode, pi, Gemini CLI, Cursor and GitHub Copilot read the same rules and skills.
 
 No framework, no build step, no dependencies: Node.js 18+ and a browser.
