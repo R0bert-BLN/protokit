@@ -31,7 +31,7 @@ Take the smaller profile when size and context disagree, or when unsure. Record 
 
 ## 3. stack.md
 Fill every section; no `<placeholder>` may remain.
-- Front matter: `repo`, `kanzo`, `mockups` (absolute path of this repository), `model`, `context`, `profile`, `verify` (one command that lints, type-checks and tests).
+- Front matter: `repo`, `kanzo`, `mockups` (absolute path of this repository), `model`, `context`, `profile`, `verify` (one command that lints, type-checks and tests), `path` (where the production repository is or will be checked out) and `agent` (the non-interactive command that runs the builder model, e.g. `pi -p --model <provider/id>`). For `pk factory`, optionally `reset`, `protected`, `llm`, `attempts`, `timeout` (see `docs/build-plan.md`, Dark factory).
 - **Stack**: the table, with versions.
 - **Conventions**: the framework's idiomatic folder structure and naming, where screens, components, theme and data live, i18n when the UI language is not English.
 - **Agent instructions**: the `AGENTS.md` for the production repository (the setup ticket creates it): stack in one line, conventions, how to take and finish Kanzo tickets, the verify command, the one-line commit format. For the `small` profile, also: "read only the files named in the ticket".
@@ -48,4 +48,4 @@ Fill every section; no `<placeholder>` may remain.
 3. Kanzo's HTTP endpoint disabled (`mcp_http = false`) → use the Kanzo MCP tools instead: `create_project`, then `create_task` per ticket in file order with its title, description and tags, and record each returned id in `kanzo.json` under the ticket key. MCP cannot set the `human` flag: list the human tickets for the user to mark on the board.
 
 ## 6. Hand over
-Report in at most 6 lines: the board URL (`http://localhost:4242`), the ticket count, and how to start the agents in the production repository: connect Kanzo (`claude mcp add kanzo --scope user -- kanzo mcp`, `codex mcp add kanzo -- kanzo mcp`, or the URL `http://localhost:4242/mcp`), then "take the next task from kanzo and do it", one agent per ticket. Do not commit unless asked.
+Report in at most 6 lines: the board URL (`http://localhost:4242`), the ticket count, and how to start the agents in the production repository: connect Kanzo (`claude mcp add kanzo --scope user -- kanzo mcp`, `codex mcp add kanzo -- kanzo mcp`, or the URL `http://localhost:4242/mcp`), then "take the next task from kanzo and do it", one agent per ticket. Or unattended: `node scripts/pk.mjs factory <slug>` (`--dry-run` first), which needs a clean checkout at `path` where `verify` passes. Do not commit unless asked.

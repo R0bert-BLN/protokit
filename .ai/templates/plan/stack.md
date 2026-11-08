@@ -7,6 +7,13 @@ model: <builder model, e.g. DeepSeek V3.2 or a self-hosted 35B>
 context: <context window, e.g. 100k>
 profile: <small | medium | large>
 verify: <one command that lints, type-checks and tests, e.g. pnpm lint && pnpm test>
+path: <absolute path of the production repository checkout, for pk factory>
+agent: <command that runs the builder agent non-interactively, e.g. pi -p --model llama-cpp/ornith>
+reset:  # optional: command run after a failed factory attempt (reinstall dependencies, reset the dev database)
+protected:  # optional: comma-separated files or folders/ the agent may not change, besides AGENTS.md and the verify script
+llm:  # optional: URL the factory polls before each attempt, e.g. http://127.0.0.1:8080/v1/models
+attempts: 5
+timeout: 30  # minutes per attempt
 ---
 
 # {{TITLE}} · build stack
